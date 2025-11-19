@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nail Disease Screening Application</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔬 Nail Disease Screening</h1>
+            <p class="subtitle">AI-Powered Nail Condition Analysis</p>
+        </header>
+
+        <!-- Medical Disclaimer -->
+        <div class="disclaimer">
+            <strong>⚠️ Medical Disclaimer:</strong>
+            <p>This application is for informational purposes only and is not a substitute for professional medical diagnosis, treatment, or advice. Always seek the advice of a qualified healthcare provider with any questions you may have regarding a medical condition. Never disregard professional medical advice or delay in seeking it because of something you have seen or read in this application.</p>
+        </div>
+
+        <!-- Upload Section -->
+        <div class="upload-section">
+            <div class="upload-area" id="uploadArea">
+                <input type="file" id="imageInput" accept="image/*" hidden>
+                <div class="upload-content">
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                    <p>Click to upload or drag and drop</p>
+                    <p class="upload-hint">PNG, JPG, JPEG, GIF, WEBP (Max 16MB)</p>
+                </div>
+            </div>
+            <button id="analyzeBtn" class="btn-primary" disabled>Analyze Image</button>
+        </div>
+
+        <!-- Preview Section -->
+        <div class="preview-section" id="previewSection" style="display: none;">
+            <h2>Uploaded Image</h2>
+            <div class="image-preview">
+                <img id="previewImage" src="" alt="Preview">
+            </div>
+        </div>
+
+        <!-- Loading Section -->
+        <div class="loading-section" id="loadingSection" style="display: none;">
+            <div class="spinner"></div>
+            <p>Analyzing image... Please wait.</p>
+        </div>
+
+        <!-- Results Section -->
+        <div class="results-section" id="resultsSection" style="display: none;">
+            <h2>Analysis Results</h2>
+            
+            <!-- Detection Visualization -->
+            <div class="detection-vis" id="detectionVis" style="display: none;">
+                <h3>Nail Detection</h3>
+                <img id="detectionImage" src="" alt="Detection visualization">
+            </div>
+
+            <!-- Classification Results -->
+            <div class="results-container" id="resultsContainer">
+                <!-- Results will be dynamically inserted here -->
+            </div>
+        </div>
+
+        <!-- Error Section -->
+        <div class="error-section" id="errorSection" style="display: none;">
+            <div class="error-message" id="errorMessage"></div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
+
