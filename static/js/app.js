@@ -124,14 +124,38 @@ function displayResults(data) {
     // Clear previous results
     resultsContainer.innerHTML = '';
 
-    // Display each nail result
-    if (data.results && data.results.length > 0) {
-        data.results.forEach((result, index) => {
-            const resultCard = createResultCard(result, index);
-            resultsContainer.appendChild(resultCard);
-        });
+    // Check if any credible diseases were detected
+    if (data.num_credible_detections === 0) {
+        // No credible detections found
+        const noDiseaseCard = document.createElement('div');
+        noDiseaseCard.className = 'result-card';
+        noDiseaseCard.style.textAlign = 'center';
+        noDiseaseCard.style.padding = '40px';
+        noDiseaseCard.innerHTML = `
+            <div style="font-size: 3em; margin-bottom: 20px;">✓</div>
+            <h3 style="color: #28a745; margin-bottom: 15px;">No Disease Identified</h3>
+            <p style="color: #666; font-size: 1.1em; line-height: 1.6;">
+                The analysis did not detect any nail conditions with sufficient confidence (>50%).<br>
+                This is a positive result indicating no significant abnormalities were found.
+            </p>
+            <p style="color: #999; font-size: 0.9em; margin-top: 20px;">
+                <strong>Note:</strong> ${data.num_nails_detected} nail(s) were analyzed, but no disease classification exceeded the 50% confidence threshold.
+            </p>
+        `;
+        resultsContainer.appendChild(noDiseaseCard);
     } else {
-        resultsContainer.innerHTML = '<p>No results to display.</p>';
+        // Display each nail result (only credible detections)
+        if (data.results && data.results.length > 0) {
+            data.results.forEach((result, index) => {
+                // Only show results with credible detections
+                if (result.disease !== null && !result.no_disease_detected) {
+                    const resultCard = createResultCard(result, index);
+                    if (resultCard) {
+                        resultsContainer.appendChild(resultCard);
+                    }
+                }
+            });
+        }
     }
 }
 
@@ -139,6 +163,11 @@ function displayResults(data) {
 function createResultCard(result, index) {
     const card = document.createElement('div');
     card.className = 'result-card';
+
+    // Only create cards for credible detections (disease !== null)
+    if (result.disease === null || result.no_disease_detected) {
+        return null;
+    }
 
     const diseaseName = formatDiseaseName(result.disease);
     const probability = (result.probability * 100).toFixed(1);
@@ -181,6 +210,7 @@ function createResultCard(result, index) {
 
 // Format disease name for display
 function formatDiseaseName(disease) {
+    if (!disease) return 'Unknown';
     return disease
         .split('_')
         .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())

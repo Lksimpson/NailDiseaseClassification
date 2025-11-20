@@ -43,7 +43,8 @@ class DiseaseClassifier:
         # Load weights if provided
         if model_path and os.path.exists(model_path):
             try:
-                checkpoint = torch.load(model_path, map_location=self.device)
+                # weights_only=False is needed for PyTorch 2.6+ when loading models with custom classes
+                checkpoint = torch.load(model_path, map_location=self.device, weights_only=False)
                 # Handle both checkpoint format and state_dict format
                 if isinstance(checkpoint, dict) and 'model_state_dict' in checkpoint:
                     self.model.load_state_dict(checkpoint['model_state_dict'])

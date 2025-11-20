@@ -36,8 +36,9 @@ os.makedirs(RESULTS_FOLDER, exist_ok=True)
 # Model configuration
 MODELS_DIR = 'models'
 DISEASE_MODEL_PATH = os.getenv('DISEASE_MODEL_PATH', None)
+YOLO_MODEL_PATH = os.getenv('YOLO_MODEL_PATH', None)
 
-# Try to find trained model weights if not specified
+# Try to find trained disease model weights if not specified
 if DISEASE_MODEL_PATH is None:
     # Check common locations for trained models
     possible_paths = [
@@ -52,12 +53,32 @@ if DISEASE_MODEL_PATH is None:
     for path in possible_paths:
         if os.path.exists(path):
             DISEASE_MODEL_PATH = path
-            print(f"Found model weights at: {path}")
+            print(f"Found disease model weights at: {path}")
+            break
+
+# Try to find trained YOLO model if not specified
+if YOLO_MODEL_PATH is None:
+    # Check common locations for trained YOLO models
+    yolo_possible_paths = [
+        os.path.join(MODELS_DIR, 'yolo_nail_detector_best.pt'),
+        os.path.join(MODELS_DIR, 'nail_detector.pt'),
+        'yolo_nail_detector_best.pt',
+    ]
+    
+    for path in yolo_possible_paths:
+        if os.path.exists(path):
+            YOLO_MODEL_PATH = path
+            print(f"Found YOLO nail detector model at: {path}")
             break
 
 # Initialize models
 print("Loading models...")
-nail_detector = NailDetector()
+nail_detector = NailDetector(model_path=YOLO_MODEL_PATH)
+if YOLO_MODEL_PATH:
+    print(f"Using custom YOLO model: {YOLO_MODEL_PATH}")
+else:
+    print("Using default YOLOv8n model (general purpose - consider training a custom model)")
+
 disease_classifier = DiseaseClassifier(model_path=DISEASE_MODEL_PATH)
 print("Models loaded successfully!")
 
@@ -123,6 +144,7 @@ def predict():
         # Step 2: Classify each detected nail
         print("Classifying nail diseases...")
         all_results = []
+        PROBABILITY_THRESHOLD = 0.5  # 50% threshold for credible detection
         
         for idx, nail_data in enumerate(detection_results['nails']):
             nail_crop = nail_data['crop']
@@ -131,15 +153,29 @@ def predict():
             
             # Classify the nail crop
             classification_result = disease_classifier.classify(nail_crop)
+            probability = float(classification_result['probability'])
             
-            all_results.append({
-                'nail_index': idx + 1,
-                'bbox': bbox,
-                'detection_confidence': float(confidence),
-                'disease': classification_result['predicted_class'],
-                'probability': float(classification_result['probability']),
-                'all_probabilities': classification_result['all_probabilities']
-            })
+            # Only include results with probability > 50%
+            if probability > PROBABILITY_THRESHOLD:
+                all_results.append({
+                    'nail_index': idx + 1,
+                    'bbox': bbox,
+                    'detection_confidence': float(confidence),
+                    'disease': classification_result['predicted_class'],
+                    'probability': probability,
+                    'all_probabilities': classification_result['all_probabilities']
+                })
+            else:
+                # Store that this nail had no credible detection
+                all_results.append({
+                    'nail_index': idx + 1,
+                    'bbox': bbox,
+                    'detection_confidence': float(confidence),
+                    'disease': None,
+                    'probability': probability,
+                    'no_disease_detected': True,
+                    'all_probabilities': classification_result['all_probabilities']
+                })
         
         # Encode visualization image
         vis_image_base64 = None
@@ -150,11 +186,16 @@ def predict():
             vis_image_base64 = encode_image_to_base64(vis_path)
             os.remove(vis_path)  # Clean up
         
+        # Check if any credible diseases were detected
+        credible_detections = [r for r in all_results if r.get('disease') is not None]
+        
         return jsonify({
             'success': True,
             'num_nails_detected': len(all_results),
+            'num_credible_detections': len(credible_detections),
             'results': all_results,
-            'detection_visualization': vis_image_base64
+            'detection_visualization': vis_image_base64,
+            'threshold': PROBABILITY_THRESHOLD
         })
     
     except Exception as e:
