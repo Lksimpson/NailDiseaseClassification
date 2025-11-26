@@ -12,6 +12,7 @@ const detectionVis = document.getElementById('detectionVis');
 const detectionImage = document.getElementById('detectionImage');
 const errorSection = document.getElementById('errorSection');
 const errorMessage = document.getElementById('errorMessage');
+const clearResultsBtn = document.getElementById('clearResultsBtn');
 
 let selectedFile = null;
 
@@ -139,22 +140,34 @@ function displayResults(data) {
                 This is a positive result indicating no significant abnormalities were found.
             </p>
             <p style="color: #999; font-size: 0.9em; margin-top: 20px;">
-                <strong>Note:</strong> ${data.num_nails_detected} nail(s) were analyzed, but no disease classification exceeded the 50% confidence threshold.
+                <strong>Note:</strong> ${data.num_nails_detected} nail(s) were analyzed. The result shown corresponds to the nail with the highest disease probability, but it did not exceed the 50% confidence threshold.
             </p>
         `;
         resultsContainer.appendChild(noDiseaseCard);
     } else {
-        // Display each nail result (only credible detections)
+        // Display the best result (nail with highest disease probability)
         if (data.results && data.results.length > 0) {
-            data.results.forEach((result, index) => {
-                // Only show results with credible detections
-                if (result.disease !== null && !result.no_disease_detected) {
-                    const resultCard = createResultCard(result, index);
-                    if (resultCard) {
-                        resultsContainer.appendChild(resultCard);
+            const result = data.results[0]; // Only one result now (the best one)
+            
+            // Show result if it has a credible detection
+            if (result.disease !== null && !result.no_disease_detected) {
+                const resultCard = createResultCard(result, 0);
+                if (resultCard) {
+                    // Add a note about multiple nails if applicable
+                    if (data.num_nails_detected > 1) {
+                        const infoNote = document.createElement('div');
+                        infoNote.style.cssText = 'margin-bottom: 20px; padding: 15px; background-color: #f8f9fa; border-left: 4px solid #007bff; border-radius: 4px;';
+                        infoNote.innerHTML = `
+                            <p style="margin: 0; color: #666; font-size: 0.95em;">
+                                <strong>ℹ️ Analysis Summary:</strong> ${data.num_nails_detected} nail(s) were detected. 
+                                The result below shows the nail with the highest disease probability.
+                            </p>
+                        `;
+                        resultsContainer.appendChild(infoNote);
                     }
+                    resultsContainer.appendChild(resultCard);
                 }
-            });
+            }
         }
     }
 }
@@ -174,7 +187,7 @@ function createResultCard(result, index) {
 
     card.innerHTML = `
         <h3>
-            <span class="nail-badge">Nail ${result.nail_index}</span>
+            <span class="nail-badge">Best Result (Nail ${result.nail_index})</span>
             ${diseaseName}
         </h3>
         
@@ -239,5 +252,37 @@ function showError(message) {
 
 function hideError() {
     errorSection.style.display = 'none';
+}
+
+// Clear results button handler
+clearResultsBtn.addEventListener('click', () => {
+    clearResults();
+});
+
+// Clear all results and reset UI
+function clearResults() {
+    // Hide results section
+    hideResults();
+    
+    // Clear results container
+    resultsContainer.innerHTML = '';
+    
+    // Clear detection visualization
+    detectionImage.src = '';
+    detectionVis.style.display = 'none';
+    
+    // Clear preview
+    previewImage.src = '';
+    previewSection.style.display = 'none';
+    
+    // Clear file input
+    imageInput.value = '';
+    selectedFile = null;
+    
+    // Reset analyze button
+    analyzeBtn.disabled = true;
+    
+    // Hide any errors
+    hideError();
 }
 

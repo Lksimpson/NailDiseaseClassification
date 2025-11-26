@@ -155,27 +155,34 @@ def predict():
             classification_result = disease_classifier.classify(nail_crop)
             probability = float(classification_result['probability'])
             
-            # Only include results with probability > 50%
-            if probability > PROBABILITY_THRESHOLD:
-                all_results.append({
-                    'nail_index': idx + 1,
-                    'bbox': bbox,
-                    'detection_confidence': float(confidence),
-                    'disease': classification_result['predicted_class'],
-                    'probability': probability,
-                    'all_probabilities': classification_result['all_probabilities']
-                })
-            else:
-                # Store that this nail had no credible detection
-                all_results.append({
-                    'nail_index': idx + 1,
-                    'bbox': bbox,
-                    'detection_confidence': float(confidence),
-                    'disease': None,
-                    'probability': probability,
-                    'no_disease_detected': True,
-                    'all_probabilities': classification_result['all_probabilities']
-                })
+            # Store all results for comparison
+            all_results.append({
+                'nail_index': idx + 1,
+                'bbox': bbox,
+                'detection_confidence': float(confidence),
+                'disease': classification_result['predicted_class'] if probability > PROBABILITY_THRESHOLD else None,
+                'probability': probability,
+                'no_disease_detected': probability <= PROBABILITY_THRESHOLD,
+                'all_probabilities': classification_result['all_probabilities']
+            })
+        
+        # Step 3: Select the nail with the highest disease probability
+        # Filter nails with credible detections (probability > threshold)
+        credible_detections = [r for r in all_results if r.get('disease') is not None]
+        
+        if len(credible_detections) > 0:
+            # Find the nail with the highest probability
+            best_result = max(credible_detections, key=lambda x: x['probability'])
+            print(f"Selected nail {best_result['nail_index']} with highest disease probability: {best_result['probability']:.2%}")
+            final_results = [best_result]
+            num_credible_detections = 1
+        else:
+            # No credible detections - return the nail with highest probability (even if below threshold)
+            # This ensures we show something meaningful to the user
+            best_result = max(all_results, key=lambda x: x['probability'])
+            print(f"No nails exceeded threshold. Showing nail {best_result['nail_index']} with highest probability: {best_result['probability']:.2%}")
+            final_results = [best_result]
+            num_credible_detections = 0
         
         # Encode visualization image
         vis_image_base64 = None
@@ -186,14 +193,11 @@ def predict():
             vis_image_base64 = encode_image_to_base64(vis_path)
             os.remove(vis_path)  # Clean up
         
-        # Check if any credible diseases were detected
-        credible_detections = [r for r in all_results if r.get('disease') is not None]
-        
         return jsonify({
             'success': True,
             'num_nails_detected': len(all_results),
-            'num_credible_detections': len(credible_detections),
-            'results': all_results,
+            'num_credible_detections': num_credible_detections,
+            'results': final_results,  # Return only the best result
             'detection_visualization': vis_image_base64,
             'threshold': PROBABILITY_THRESHOLD
         })
