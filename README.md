@@ -19,6 +19,43 @@ This project implements a multi-model approach to nail disease classification, c
 - **Web Interface**: Interactive Flask-based UI for easy image upload and analysis
 - **Real-time Predictions**: Quick disease classification with confidence scores
 
+## Dataset
+The models are trained on nail disease datasets containing images of various nail conditions. The datasets can be accessed from multiple sources:
+Classification Dataset
+
+Kaggle Nail Disease Dataset: https://www.kaggle.com/datasets/nikhilgurav21/nail-disease-detection-dataset/data 
+
+Contains labeled images of different nail diseases
+Used for training AlexNet, VGG16, ResNet50, DenseNet, and GoogleNet models
+
+
+
+## Object Detection Dataset
+
+Roboflow Fingernails Dataset: https://universe.roboflow.com/fingernail-ztwys/fingernails-xb812
+
+Contains annotated nail images for object detection
+Used for training the YOLO nail detection model
+
+
+
+Setup Instructions
+For Classification Models (Kaggle):
+
+Download the dataset from Kaggle
+Extract the files to a data/ directory in the project root
+Ensure the dataset is organized with separate folders for each disease class
+Update the dataset paths in the respective notebook files before training
+Note: You may need to create a Kaggle account and accept the dataset's terms of use
+
+For YOLO Detection (Roboflow):
+
+Access the Roboflow dataset at the link above
+Generate and download the dataset in YOLO format
+Place the dataset in the appropriate directory structure
+Update the data configuration in yolo_nail_object_detection.ipynb
+The dataset includes train, validation, and test splits
+
 ## Project Structure
 
 ```
