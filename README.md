@@ -45,7 +45,7 @@ For Classification Models (Kaggle):
 Download the dataset from Kaggle
 Extract the files to a data/ directory in the project root
 Ensure the dataset is organized with separate folders for each disease class
-Update the dataset paths in the respective notebook files before training
+Update the dataset paths in the respective notebook files in the `notebooks/` directory before training
 Note: You may need to create a Kaggle account and accept the dataset's terms of use
 
 For YOLO Detection (Roboflow):
@@ -53,23 +53,35 @@ For YOLO Detection (Roboflow):
 Access the Roboflow dataset at the link above
 Generate and download the dataset in YOLO format
 Place the dataset in the appropriate directory structure
-Update the data configuration in yolo_nail_object_detection.ipynb
+Update the data configuration in `notebooks/yolo_nail_object_detection.ipynb`
 The dataset includes train, validation, and test splits
 
 ## Project Structure
 
 ```
 NailDiseaseClassification/
-├── models/                          # Trained model weights
+├── notebooks/                       # Jupyter notebooks for model training
+│   ├── alexnet-nailclassification.ipynb
+│   ├── vgg16-nailclassification.ipynb
+│   ├── resnet50-nail-classification (1).ipynb
+│   ├── densenet-10-epoch-and-32-batch.ipynb
+│   ├── GoogleNet.ipynb
+│   ├── GoogleNet.html              # Exported HTML version
+│   └── yolo_nail_object_detection.ipynb
+├── models/                          # Model code and trained weights
+│   ├── __init__.py
+│   ├── disease_classifier.py       # Disease classification model
+│   └── nail_detector.py            # YOLO nail detection model
+├── data/                            # Dataset directory
+│   ├── train/                      # Training images
+│   ├── valid/                      # Validation images
+│   └── test/                       # Test images
 ├── static/                          # Static assets for web interface
+│   ├── css/
+│   └── js/
 ├── templates/                       # HTML templates for Flask app
-├── runs/nail-detector2/             # YOLO training outputs
-├── alexnet-nailclassification.ipynb
-├── vgg16-nailclassification.ipynb
-├── resnet50-nail-classification.ipynb
-├── densenet-10-epoch-and-32-batch.ipynb
-├── GoogleNet.ipynb
-├── yolo_nail_object_detection.ipynb
+├── runs/                            # Training outputs
+│   └── nail-detector2/             # YOLO training outputs
 ├── app.py                           # Flask web application
 ├── best.pt                          # Best YOLO model weights
 ├── requirements.txt                 # Python dependencies
@@ -100,16 +112,16 @@ pip install -r requirements.txt
 
 ### Training Models
 
-Each model has its own Jupyter notebook for training:
+Each model has its own Jupyter notebook for training, located in the `notebooks/` directory:
 
-- **AlexNet**: `alexnet-nailclassification.ipynb`
-- **VGG16**: `vgg16-nailclassification.ipynb`
-- **ResNet50**: `resnet50-nail-classification.ipynb`
-- **DenseNet**: `densenet-10-epoch-and-32-batch.ipynb`
-- **GoogleNet**: `GoogleNet.ipynb`
-- **YOLO Detection**: `yolo_nail_object_detection.ipynb`
+- **AlexNet**: `notebooks/alexnet-nailclassification.ipynb`
+- **VGG16**: `notebooks/vgg16-nailclassification.ipynb`
+- **ResNet50**: `notebooks/resnet50-nail-classification (1).ipynb`
+- **DenseNet**: `notebooks/densenet-10-epoch-and-32-batch.ipynb`
+- **GoogleNet**: `notebooks/GoogleNet.ipynb`
+- **YOLO Detection**: `notebooks/yolo_nail_object_detection.ipynb`
 
-Open any notebook in Jupyter and follow the training steps to train models on your dataset.
+Open any notebook in Jupyter and follow the training steps to train models on your dataset. All notebooks are organized in the `notebooks/` folder for better project structure.
 
 ### Running the Web Application
 
