@@ -2,6 +2,10 @@
 
 A comprehensive deep learning system for detecting and classifying nail diseases using multiple state-of-the-art computer vision models with an interactive web interface.
 
+## ⚠️ Medical Disclaimer
+
+**This application is for informational purposes only and is not a substitute for professional medical diagnosis, treatment, or advice.** Always seek the advice of a qualified healthcare provider with any questions you may have regarding a medical condition.
+
 ## Overview
 
 This project implements a multi-model approach to nail disease classification, combining object detection and classification techniques to provide accurate diagnosis of various nail conditions. The system includes five different classification models, YOLO-based nail detection, GradCAM visualization for model interpretability, and a user-friendly web interface.
@@ -85,8 +89,7 @@ NailDiseaseClassification/
 ├── app.py                           # Flask web application
 ├── best.pt                          # Best YOLO model weights
 ├── requirements.txt                 # Python dependencies
-├── MODEL_SETUP.md                   # Model setup instructions
-└── README_APP.md                    # Application documentation
+└── MODEL_SETUP.md                   # Model setup instructions
 ```
 
 ## Installation
@@ -125,7 +128,29 @@ Open any notebook in Jupyter and follow the training steps to train models on yo
 
 ### Running the Web Application
 
-Start the Flask web interface:
+#### Setup Model Weights
+
+**Important**: The application requires trained DenseNet model weights for accurate predictions.
+
+**Option A: Use Trained Model**
+- Train your model using `notebooks/densenet-10-epoch-and-32-batch.ipynb`
+- Save the model weights (see `MODEL_SETUP.md` for details)
+- Place the `.pth` file in the `models/` directory with one of these names:
+  - `densenet_nail_disease_best.pth` (recommended)
+  - `densenet_nail_disease_weights.pth`
+  - `densenet_model.pth`
+  - `nail_disease_classifier.pth`
+
+**Option B: Use Environment Variable**
+```bash
+export DISEASE_MODEL_PATH=/path/to/your/model.pth
+```
+
+**Note**: If no trained weights are found, the app will use randomly initialized weights (not suitable for predictions). The app will automatically search for model files and display a message indicating whether weights were loaded.
+
+For YOLO: The application will automatically download YOLOv8n for nail detection.
+
+#### Start the Application
 
 ```bash
 python app.py
@@ -133,15 +158,15 @@ python app.py
 
 The application will be available at `http://localhost:5000`
 
-### Using the Application
+#### Using the Application
 
-1. Navigate to the web interface
-2. Upload an image of a nail
-3. The system will:
-   - Detect the nail region using YOLO
-   - Classify the nail disease using multiple models
-   - Display predictions with confidence scores
-   - Show GradCAM visualizations to explain the predictions
+1. Open the web interface in your browser
+2. Upload a hand image (PNG, JPG, JPEG, GIF, WEBP, max 16MB)
+3. Click "Analyze Image"
+4. View the results:
+   - Detection visualization showing detected nail regions
+   - Classification results with probability scores
+   - All condition probabilities for each detected nail
 
 ## Models
 
@@ -154,6 +179,16 @@ All five classification models are trained on the same nail disease dataset:
 - **ResNet50**
 - **DenseNet**
 - **GoogleNet**
+
+### Disease Classes
+
+The models can classify the following conditions:
+- Acral Lentiginous Melanoma
+- Healthy Nail
+- Onychogryphosis
+- Blue Finger
+- Clubbing
+- Pitting
 
 ### Object Detection
 
@@ -181,8 +216,51 @@ Refer to individual notebooks for detailed performance metrics.
 
 The Flask application provides the following endpoints:
 
-- `GET /`: Main page with upload interface
-- `POST /predict`: Upload image and get predictions
-- `GET /visualize`: View GradCAM visualizations
+### `GET /`
+Main page with upload interface
 
-See `README_APP.md` for detailed API documentation.
+### `GET /health`
+Health check endpoint
+- Returns: JSON with status and model loading information
+- Example response: `{"status": "healthy", "models_loaded": true}`
+
+### `POST /predict`
+Main prediction endpoint
+- **Input**: Multipart form data with `image` field
+- **Output**: JSON with detection and classification results
+- **Response includes**:
+  - `success`: Boolean indicating if prediction was successful
+  - `num_nails_detected`: Number of nails found in the image
+  - `results`: Array of classification results for each detected nail
+    - `nail_index`: Index of the detected nail
+    - `bbox`: Bounding box coordinates [x1, y1, x2, y2]
+    - `detection_confidence`: Confidence score for nail detection
+    - `disease`: Predicted disease class
+    - `probability`: Confidence score for the prediction
+    - `all_probabilities`: Dictionary of probabilities for all classes
+  - `detection_visualization`: Base64-encoded image with bounding boxes
+
+## Application Architecture
+
+### Components
+
+1. **Backend (Flask)**: `app.py` - Main web server and API endpoints
+2. **Nail Detector**: `models/nail_detector.py` - YOLO-based nail detection
+3. **Disease Classifier**: `models/disease_classifier.py` - DenseNet201-based classification
+4. **Frontend**: HTML/CSS/JavaScript for user interface
+
+## Development Notes
+
+- **Model Weights Required**: The DenseNet classifier requires trained model weights to make accurate predictions. See `MODEL_SETUP.md` for instructions on how to save and load trained models.
+- The YOLO model uses a general-purpose pretrained model. For better nail detection, train a custom YOLO model on nail-specific data.
+- The disease classifier uses DenseNet201 architecture. You must train the model on your dataset and save the weights for production use.
+- The application is designed for screening purposes only, not medical diagnosis.
+
+### Future Improvements
+
+1. Train a custom YOLO model for better nail detection
+2. Train the DenseNet201 classifier on your dataset
+3. Add model persistence and caching
+4. Add user authentication and history
+5. Improve error handling and validation
+6. Add GradCAM visualization support
